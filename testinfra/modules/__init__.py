@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import testinfra.modules.base
 
-modules = {
+builtin_modules = {
     "addr": "addr:Addr",
     "ansible": "ansible:Ansible",
     "command": "command:Command",
@@ -44,9 +44,14 @@ modules = {
     "block_device": "blockdevice:BlockDevice",
 }
 
+modules = {}
+for name, class_location in builtin_modules.items():
+    modname, classname = class_location.split(":")
+    modname = ".".join([__name__, modname])
+    modules[name] = "{}:{}".format(modname, classname)
+
 
 def get_module_class(name: str) -> type["testinfra.modules.base.Module"]:
     modname, classname = modules[name].split(":")
-    modname = ".".join([__name__, modname])
     module = importlib.import_module(modname)
     return getattr(module, classname)  # type: ignore[no-any-return]

@@ -9,7 +9,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
+
+import testinfra.modules
+
+
+def register_module(name: str) -> Callable[[type["Module"]], type["Module"]]:
+    """registers the module under the given name
+
+    Once it is registered, you can call the module as "host.NAME".
+
+    Example:
+
+    >>> @register_module("my_module")
+    ... class MyModule(Module):
+    ...     def __init__(self, param):
+    ...         self.param = param
+    >>> def my_test(host):
+    ...     foo = host.my_module("param")
+    """
+
+    def wrapper(clz: type["Module"]) -> type["Module"]:
+        testinfra.modules.modules[name] = "{}:{}".format(
+            clz.__module__,
+            clz.__name__,
+        )
+        return clz
+
+    return wrapper
 
 
 class Module:
